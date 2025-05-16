@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Configuration
+RESOURCE_ID="$1" # The full resource ID
+TAGS="$2" # Comma-separated list of key=value tags
+
+if ||; then
+  echo "Usage: $0 <resource_id> <key1=value1,key2=value2,...>"
+  exit 1
+fi
+
+echo "Applying tags '$TAGS' to resource '$RESOURCE_ID'..."
+
+IFS=',' read -ra TAG_ARRAY <<< "$TAGS"
+
+for tag in "${TAG_ARRAY[@]}"; do
+  IFS='=' read -r KEY VALUE <<< "$tag"
+  if [ -n "$KEY" ] && [ -n "$VALUE" ]; then
+    echo "Setting tag '$KEY' to '$VALUE'"
+    az resource tag --resource "$RESOURCE_ID" --tags "$KEY=$VALUE" --resource-group "$(echo "$RESOURCE_ID" | awk -F '/' '{print $5}')" --name "$(echo "$RESOURCE_ID" | awk -F '/' '{print $9}')" --resource-type "$(echo "$RESOURCE_ID" | awk -F '/' '{print $7}')"
+  else
+    echo "Invalid tag format: $tag"
+  fi
+done
+
+echo "Tagging complete for resource '$RESOURCE_ID'."
